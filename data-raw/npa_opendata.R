@@ -51,5 +51,35 @@ if (length(fs::dir_ls(here::here("data-raw/npa"), recurse = TRUE, regexp = "(hoj
 # ファイル定義書 -----------------------------------------------------------------
 # https://www.npa.go.jp/publications/statistics/koutsuu/opendata/teigisyo/teigisyo.html
 # 各種コード表 ------------------------------------------------------------------
-# https://www.npa.go.jp/publications/statistics/koutsuu/opendata/koudohyou/koudohyou.html
+if (length(fs::dir_ls(here::here("data-raw/npa/code_tbl"), regexp = ".csv$")) == 59L) {
+  x <- 
+    sprintf("%spublications/statistics/koutsuu/opendata/koudohyou/koudohyou.html", 
+            npa_domain) |> 
+    rvest::read_html()
+  
+  df_npa_code <- 
+    tibble::tibble(
+      url = x |> 
+        rvest::html_elements(css = "#contArea > main > article > section > section > p > a") |> 
+        rvest::html_attr(name = "href") |> 
+        xml2::url_absolute(base = npa_domain),
+      name = x |> 
+        rvest::html_elements(css = "#contArea > main > article > section > section > p > a") |> 
+        rvest::html_text()) |> 
+    ensurer::ensure(nrow(.) == 59L)
+  
+  fs::dir_create(here::here("data-raw/npa/code_tbl"))
+  
+  purrr::walk(
+    df_npa_code$url,
+    function(url) {
+      Sys.sleep(8)
+      download.file(url = url,
+                    destfile = here::here(glue::glue("data-raw/npa/code_tbl/{x}",
+                                                     x = basename(url))))
+    }
+  )
+}
+
+
 
