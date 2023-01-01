@@ -49,7 +49,29 @@ if (length(fs::dir_ls(here::here("data-raw/npa"), recurse = TRUE, regexp = "(hoj
 
 
 # ファイル定義書 -----------------------------------------------------------------
-# https://www.npa.go.jp/publications/statistics/koutsuu/opendata/teigisyo/teigisyo.html
+if (length(fs::dir_ls(here::here("data-raw/npa/teigisyo"), regexp = ".csv$")) != 3L) {
+  fs::dir_create(here::here("data-raw/npa/teigisyo"))
+  x <- 
+    sprintf("%spublications/statistics/koutsuu/opendata/teigisyo/teigisyo.html", 
+            npa_domain) |> 
+    rvest::read_html()
+  
+  x |> 
+    rvest::html_elements(css = "#contArea > main > article > section > section > p > a") |> 
+    rvest::html_attr(name = "href") |> 
+    xml2::url_absolute(base = npa_domain) |> 
+    ensurer::ensure(length(.) == 3L) |> 
+    purrr::walk(
+      function(url) {
+        Sys.sleep(8)
+        download.file(url = url,
+                      destfile = here::here(glue::glue("data-raw/npa/teigisyo/{x}",
+                                                       x = basename(url))))
+      }
+    )
+}
+
+
 # 各種コード表 ------------------------------------------------------------------
 if (length(fs::dir_ls(here::here("data-raw/npa/code_tbl"), regexp = ".csv$")) == 59L) {
   x <- 
@@ -80,6 +102,3 @@ if (length(fs::dir_ls(here::here("data-raw/npa/code_tbl"), regexp = ".csv$")) ==
     }
   )
 }
-
-
-
