@@ -115,6 +115,7 @@ read_npa_code_tbl <- function(path) {
   } else {
     switch (item,
             "警察署等コード" = read_npa_code_keisatusyotoukoudo(path),
+            "都道府県コード" = read_npa_code_todouhukenkoudo(path),
             "道路管理者区分" = read_npa_code_dourokanrisyakubun(path),
             "トンネル番号" = read_npa_code_tonnerubangou(path)
     )
