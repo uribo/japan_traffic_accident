@@ -94,8 +94,9 @@ read_npa_code_tbl <- function(path) {
     meta |> 
     purrr::pluck("item")
   cli::cli_inform(
-    c(stringr::str_glue("項目名: {item}"),
-      stringr::str_glue("適用: {meta[[2]]}")))
+    c("コード表の情報",
+      "i" = glue::glue("項目名: {item}"),
+      "i" = glue::glue("適用: {meta[[2]]}")))
   if (item %in% c("地点コード", "市区町村コード", "発生日時",                                                                                                   
                   "車両の衝突部位", "地点 緯度(北緯)", "地点 経度(東経)", 
                   "補充票番号", "発生地点", "本票番号", "トンネル延長距離")) {
