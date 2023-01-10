@@ -213,3 +213,46 @@ detect_code_item <- function(path) {
     stringr::str_remove_all(",") |> 
     stringr::str_squish()
 }
+
+modify_npa_honhyo <- function(df) {
+  df |> 
+    dplyr::mutate(datetime = lubridate::make_datetime(year = `発生日時_年`, 
+                                                      month = `発生日時_月`,
+                                                      day = `発生日時_日`,
+                                                      hour = `発生日時_時`,
+                                                      min = `発生日時_分`),
+                  latitude = `地点_緯度_北緯`,
+                  longitude = `地点_経度_東経`) |> 
+    dplyr::mutate(latitude = stringr::str_c(
+      "北緯",
+      latitude |> 
+        stringr::str_sub(1, 2),
+      "度",
+      latitude |> 
+        stringr::str_sub(3, 4),
+      "分",
+      (latitude |> 
+         stringr::str_sub(5, 6) |> 
+         as.numeric() +
+         latitude |> 
+         stringr::str_sub(7) |> 
+         as.numeric()/1000),
+      "秒"),
+      longitude = stringr::str_c(
+        "東経",
+        longitude |> 
+          stringr::str_sub(1, 3),
+        "度",
+        longitude |> 
+          stringr::str_sub(4, 5),
+        "分",
+        (longitude |> 
+           stringr::str_sub(7, 7) |> 
+           as.numeric() +
+           longitude |> 
+           stringr::str_sub(8) |> 
+           as.numeric()/1000),
+        "秒")) |> 
+    dplyr::mutate(longitude = kuniezu::parse_lon_dohunbyo(longitude),
+                  latitude = kuniezu::parse_lat_dohunbyo(latitude))
+}
