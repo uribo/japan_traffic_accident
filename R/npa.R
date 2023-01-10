@@ -3,7 +3,7 @@ read_npa_honhyo <- function(path) {
     readr::read_csv(
       path,
       locale = readr::locale(encoding = "cp932"),
-      col_types = "dcccdcccdccdddddddddccdcdcdcdccddcccccccccccccddddddddiidd")
+      col_types = "dcccdddcdccdddddddddccdcdcdcdccddcccccccccccccddddddddiidd")
   colnames(d) <- 
     c("資料区分", "都道府県コード", "警察署等コード", 
       "本票番号", "事故内容", "死者数", "負傷者数", 
