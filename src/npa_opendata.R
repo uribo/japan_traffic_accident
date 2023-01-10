@@ -18,6 +18,7 @@
 
 library(arrow)
 d <- 
+  # 徳島県徳島市
   arrow::open_dataset("data/npa/honhyo/",
                       schema = arrow::schema(
                         資料区分 = arrow::int32(),
@@ -49,7 +50,7 @@ d <-
                         車道幅員 = arrow::utf8(),
                         道路線形 = arrow::int32(),
                         衝突地点 = arrow::utf8(),
-                        ゾーン帰省 = arrow::utf8(),
+                        ゾーン規制 = arrow::utf8(),
                         中央分離帯施設等 = arrow::int32(),
                         歩車道区分 = arrow::int32(),
                         事故類型 = arrow::utf8(),
@@ -78,8 +79,9 @@ d <-
                         latitude = double(),
                         longitude = double()
                       )) |> 
-  filter(pref_code == "80") |> 
-  select(!c(pref_code, year, month, starts_with("発生日時"))) |> 
+  filter(資料区分 == 1, pref_code == "80", 市区町村コード == "201") |> 
+  select(!c(pref_code, year, month, starts_with("発生日時"))) |>
+  select(datetime, latitude, longitude, 警察署等コード, 死者数, 負傷者数) |> 
   collect()
 
 d |> 
