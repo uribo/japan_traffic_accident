@@ -5,6 +5,7 @@
 # 補充票: hojuhyo
 # 高速票: kosokuhyo
 #################################
+fs::dir_create(here::here("data/npa"), recurse = TRUE)
 fs::dir_create(here::here("data-raw/npa",
                           c("teigisyo", "code_tbl")), recurse = TRUE)
 npa_domain <- "https://www.npa.go.jp/"
@@ -99,4 +100,8 @@ if (length(fs::dir_ls(here::here("data-raw/npa/code_tbl"), regexp = ".csv$")) !=
                                                      x = basename(url))))
     }
   )
+  df_npa_code |> 
+    transmute(name,
+              file = basename(url)) |> 
+    readr::write_csv(here::here("data/npa/コード表一覧.csv"))
 }
