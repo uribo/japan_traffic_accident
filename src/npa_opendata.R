@@ -110,3 +110,9 @@ files <-
 read_npa_kosokuhyo(files[3])
 
 
+# 補充票 ---------------------------------------------------------------------
+files <-
+  fs::dir_ls(here::here("data-raw/npa"), 
+             recurse = TRUE, 
+             regexp = "hojuhyo_.+.csv$")
+read_npa_hojuhyo(files[3])

@@ -46,6 +46,21 @@ read_npa_kosokuhyo <- function(path) {
   d
 }
 
+read_npa_hojuhyo <- function(path) {
+  d <-
+    readr::read_csv(
+      path,
+      locale = readr::locale(encoding = "cp932"),
+      col_types = "ddccccdcdddcccd")
+  colnames(d) <-
+    c("資料区分", "都道府県コード", "警察署等コード", 
+      "本票番号", "補充票番号", "当事者種別", "乗車別", 
+      "乗車等の区分", "エアバッグの装備", "サイドエアバッグの装備", 
+      "人身損傷程度", "用途別", "車両形状", "車両の衝突部位", 
+      "車両の損壊程度")
+  d
+}
+
 parse_meta <- function(x, type) {
   type <- rlang::arg_match(type,
                            c("item", "cover", "description"))
