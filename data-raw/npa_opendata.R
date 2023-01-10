@@ -105,3 +105,40 @@ if (length(fs::dir_ls(here::here("data-raw/npa/code_tbl"), regexp = ".csv$")) !=
               file = basename(url)) |> 
     readr::write_csv(here::here("data/npa/コード表一覧.csv"))
 }
+
+
+# parquet形式への出力 -----------------------------------------------------------
+library(dplyr)
+source(here::here("R/npa.R"))
+
+code_files <- 
+  fs::dir_ls(here::here("data-raw/npa/code_tbl/"), 
+             recurse = TRUE, 
+             regexp = ".csv$") |> 
+  naturalsort::naturalsort()
+
+d_raw <- 
+  fs::dir_ls(here::here("data-raw/npa"), 
+           recurse = TRUE, 
+           regexp = "honhyo_.+.csv$") |> 
+  purrr::map(
+    function(file) {
+      read_npa_honhyo(file)    
+    }
+  ) |> 
+  purrr::list_rbind()
+
+glimpse(d_raw)
+
+d <-
+  d_raw |> 
+  modify_npa_honhyo()
+
+fs::dir_create(here::here("data/npa/honhyo"))
+d |> 
+  rename(pref_code = `都道府県コード`,
+         year = 発生日時_年,
+         month = 発生日時_月) |> 
+  arrow::write_dataset(path = "data/npa/honhyo",
+                       partitioning = c("pref_code", "year", "month"))
+usethis::use_git_ignore("*.parquet")
