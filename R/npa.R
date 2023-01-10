@@ -30,6 +30,22 @@ read_npa_honhyo <- function(path) {
   d
 }
 
+read_npa_kosokuhyo <- function(path) {
+  d <-
+    readr::read_csv(
+      path,
+      locale = readr::locale(encoding = "cp932"),
+      col_types = "ddccccccddccccdcc")
+  colnames(d) <- 
+    c("資料区分", "都道府県コード", "警察署等コード", 
+      "本票番号", "発生地点", "道路管理者区分", "道路区分", 
+      "道路構造", "曲線半径", "縦断勾配", "トンネル番号", 
+      "当事者車両台数", "事故類型", "車両単独事故の対象物", 
+      "臨時速度規制の有無", "速度規制_臨時のみ", 
+      "トンネル延長距離")
+  d
+}
+
 parse_meta <- function(x, type) {
   type <- rlang::arg_match(type,
                            c("item", "cover", "description"))

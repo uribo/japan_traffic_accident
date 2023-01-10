@@ -102,5 +102,11 @@ d |>
   mapview::mapview()
 
 
+# 高速票 ---------------------------------------------------------------------
+files <-
+  fs::dir_ls(here::here("data-raw/npa"), 
+             recurse = TRUE, 
+             regexp = "kosokuhyo_.+.csv$")
+read_npa_kosokuhyo(files[3])
 
 
