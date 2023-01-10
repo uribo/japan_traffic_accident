@@ -38,27 +38,44 @@ d_raw <-
 
 d <- 
   d_raw |> 
-  filter(都道府県コード == "80", 警察署等コード == "101", 市区町村コード == "201") |> 
-  filter(事故内容 == 1, 事故類型 == "21") |> 
-  select(!c(資料区分, 都道府県コード, 警察署等コード, 市区町村コード)) |>
-  select(!c(事故内容, 死者数)) |> 
-  select(!c(ゾーン規制, 環状交差点の直径, 中央分離帯施設等,
-            天候, 地形, 上下線, 路面状態, 道路形状, 車道幅員, 道路線形,
-            歩車道区分)) |> 
-  select(!c(starts_with("当事者種別"), starts_with("車両形状"), 
-            starts_with("一時停止規制"),
-            starts_with("サイドエアバッグの装備"), starts_with("エアバッグの装備"),
-            starts_with("車両の衝突部位"), starts_with("速度規制"),
-            starts_with("用途別"), starts_with("車両の損壊程度"),
-            starts_with("人身損傷程度"))) |> 
-  modify_npa_honhyo() |> 
-  select(!c(starts_with("発生日時"), starts_with("地点_")))
+  modify_npa_honhyo()
 
 # glimpse(d)
 
+fs::dir_create(here::here("data/npa/honhyo"))
 d |> 
-  sf::st_as_sf(coords = c("longitude", "latitude"), crs = 4326) |> 
+  rename(pref_code = `都道府県コード`) |> 
+  mutate(year = lubridate::year(datetime),
+         month = lubridate::month(datetime)) |> 
+  arrow::write_dataset(path = "data/npa/honhyo",
+                partitioning = c("pref_code", "year", "month"))
+usethis::use_git_ignore("*.parquet")
+
+names(d_raw)
+
+library(arrow)
+d <- 
+  arrow::open_dataset("data/npa/honhyo/",
+                      schema = arrow::schema(
+                        # 資料区分 = double(),
+                        pref_code = utf8(),
+                        datetime = arrow::timestamp(unit = "s"),
+                        latitude = double(),
+                        longitude = double())) |> 
+  filter(pref_code == "80") |> 
+  collect()
+
+d |>
+  filter(!is.na(longitude), !is.na(latitude)) |>
+  sf::st_as_sf(coords = c("longitude", "latitude"), crs = 4326) |>
   mapview::mapview()
+
+# 入力値の誤り？
+d |> 
+  dplyr::filter(is.na(latitude) | is.na(longitude)) |> 
+  select(latitude, longitude) |> 
+  distinct(latitude, longitude, .keep_all = TRUE) |> 
+  ensurer::ensure(nrow(.) == 3L)
 
 
 # 高速票 ---------------------------------------------------------------------
