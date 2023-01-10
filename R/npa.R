@@ -3,7 +3,7 @@ read_npa_honhyo <- function(path) {
     readr::read_csv(
       path,
       locale = readr::locale(encoding = "cp932"),
-      col_types = "ddccdcccdccdddddddddccdcdcdcdccddcccccccccccccdddddddddddd")
+      col_types = "ddccdcccdccdddddddddccdcdcdcdccddcccccccccccccddddddddiidd")
   colnames(d) <- 
     c("資料区分", "都道府県コード", "警察署等コード", 
       "本票番号", "事故内容", "死者数", "負傷者数", 
@@ -25,7 +25,8 @@ read_npa_honhyo <- function(path) {
       "車両の損壊程度_当事者B", "エアバッグの装備_当事者A", 
       "エアバッグの装備_当事者B", "サイドエアバッグの装備_当事者A", 
       "サイドエアバッグの装備_当事者B", "人身損傷程度_当事者A", 
-      "人身損傷程度_当事者B", "地点_緯度_北緯", "地点_経度_東経", 
+      "人身損傷程度_当事者B", 
+      "地点_緯度_北緯", "地点_経度_東経", 
       "曜日_発生年月日", "祝日_発生年月日")
   d
 }
