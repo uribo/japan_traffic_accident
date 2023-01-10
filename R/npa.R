@@ -215,45 +215,81 @@ detect_code_item <- function(path) {
     stringr::str_squish()
 }
 
+coord_to_dohun <- function(x, type) {
+  rlang::arg_match(type,
+                   c("longitude", "latitude"))
+  switch (type,
+          "latitude" = .latitude_to_dohun(x),
+          "longitude" = .longitude_to_dohun(x)
+  )
+}
+
+.latitude_to_dohun <- function(x) {
+  x <- 
+    as.integer(
+      stringr::str_pad(
+        as.integer(x), width = 9, pad = "0", side = "right"))
+  stringr::str_c(
+    "北緯",
+    x |> 
+      stringr::str_sub(1, 2),
+    "度",
+    x |> 
+      stringr::str_sub(3, 4),
+    "分",
+    (x |> 
+       stringr::str_sub(5, 6) |> 
+       as.numeric() +
+       x |> 
+       stringr::str_sub(7) |> 
+       as.numeric()/1000),
+    "秒")
+}
+.longitude_to_dohun <- function(x) {
+  x <- 
+    as.integer(x)
+  stringr::str_c(
+    "東経",
+    x |> 
+      stringr::str_sub(1, 3),
+    "度",
+    x |> 
+      stringr::str_sub(4, 5),
+    "分",
+    (x |> 
+       stringr::str_sub(7, 7) |> 
+       as.numeric() +
+       x |> 
+       stringr::str_sub(8) |> 
+       as.numeric()/1000),
+    "秒")
+}
+
 modify_npa_honhyo <- function(df) {
   df |> 
     dplyr::mutate(datetime = lubridate::make_datetime(year = `発生日時_年`, 
                                                       month = `発生日時_月`,
                                                       day = `発生日時_日`,
                                                       hour = `発生日時_時`,
-                                                      min = `発生日時_分`),
-                  latitude = `地点_緯度_北緯`,
+                                                      min = `発生日時_分`)) |>
+    dplyr::mutate(latitude = `地点_緯度_北緯`,
                   longitude = `地点_経度_東経`) |> 
-    dplyr::mutate(latitude = stringr::str_c(
-      "北緯",
-      latitude |> 
-        stringr::str_sub(1, 2),
-      "度",
-      latitude |> 
-        stringr::str_sub(3, 4),
-      "分",
-      (latitude |> 
-         stringr::str_sub(5, 6) |> 
-         as.numeric() +
-         latitude |> 
-         stringr::str_sub(7) |> 
-         as.numeric()/1000),
-      "秒"),
-      longitude = stringr::str_c(
-        "東経",
-        longitude |> 
-          stringr::str_sub(1, 3),
-        "度",
-        longitude |> 
-          stringr::str_sub(4, 5),
-        "分",
-        (longitude |> 
-           stringr::str_sub(7, 7) |> 
-           as.numeric() +
-           longitude |> 
-           stringr::str_sub(8) |> 
-           as.numeric()/1000),
-        "秒")) |> 
-    dplyr::mutate(longitude = kuniezu::parse_lon_dohunbyo(longitude),
-                  latitude = kuniezu::parse_lat_dohunbyo(latitude))
+    dplyr::mutate(
+      dplyr::across(.cols = c(latitude, longitude),
+                    .fns = ~ dplyr::na_if(.x, 0))
+    ) |> 
+    dplyr::mutate(latitude = dplyr::if_else(is.na(latitude),
+                                            NA_character_,
+                                            coord_to_dohun(latitude, "latitude")),
+                  longitude = dplyr::if_else(is.na(longitude),
+                                             NA_character_,
+                                             coord_to_dohun(longitude, "longitude"))) |> 
+    rowwise() |> 
+    dplyr::mutate(latitude = ifelse(is.na(latitude), 
+                                    NA_real_,
+                                    kuniezu::parse_lat_dohunbyo(latitude)),
+                  longitude = ifelse(is.na(longitude), 
+                                     NA_real_,
+                                     kuniezu::parse_lon_dohunbyo(longitude))) |> 
+    ungroup()
 }
