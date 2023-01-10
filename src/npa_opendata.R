@@ -1,16 +1,17 @@
 library(dplyr)
 source(here::here("R/npa.R"))
 
-files <-
-  fs::dir_ls(here::here("data-raw/npa"), 
-             recurse = TRUE, 
-             regexp = "(hoju|hon|kosoku)hyo_.+.csv$")
 code_files <- 
   fs::dir_ls(here::here("data-raw/npa/code_tbl/"), 
              recurse = TRUE, 
              regexp = ".csv$") |> 
   naturalsort::naturalsort()
 
+# 本票 ----------------------------------------------------------------------
+files <-
+  fs::dir_ls(here::here("data-raw/npa"), 
+             recurse = TRUE, 
+             regexp = "honhyo_.+.csv$")
 df_code <- 
   readr::read_csv(here::here("data/npa/コード表一覧.csv"), 
                 col_types = "cc")
@@ -26,10 +27,19 @@ read_npa_code_tbl(code_files[3]) |>
 read_npa_code_tbl(code_files[2]) |> 
   filter(stringr::str_detect(都道府県名, "徳島"))
 
+d_raw <- 
+  files |> 
+  purrr::map(
+    function(file) {
+      read_npa_honhyo(file)    
+    }
+  ) |> 
+  purrr::list_rbind()
+
 d <- 
-  read_npa_honhyo(files[2]) |> 
+  d_raw |> 
   filter(都道府県コード == "80", 警察署等コード == "101", 市区町村コード == "201") |> 
-  filter(事故内容 == 2, 事故類型 == "21") |> 
+  filter(事故内容 == 1, 事故類型 == "21") |> 
   mutate(datetime = lubridate::make_datetime(year = `発生日時_年`, 
                                              month = `発生日時_月`,
                                              day = `発生日時_日`,
@@ -47,5 +57,50 @@ d <-
             starts_with("用途別"), starts_with("車両の損壊程度"),
             starts_with("人身損傷程度")))
 
-glimpse(d)
+# glimpse(d)
+
+d <- 
+  d |> 
+  rename(latitude = `地点_緯度_北緯`,
+         longitude = `地点_経度_東経`)
+d <- 
+  d |> 
+  transmute(latitude = stringr::str_c(
+    "北緯",
+    latitude |> 
+      stringr::str_sub(1, 2),
+    "度",
+    latitude |> 
+      stringr::str_sub(3, 4),
+    "分",
+    (latitude |> 
+       stringr::str_sub(5, 6) |> 
+       as.numeric() +
+       latitude |> 
+       stringr::str_sub(7) |> 
+       as.numeric()/1000),
+    "秒"),
+    longitude = stringr::str_c(
+      "東経",
+      longitude |> 
+        stringr::str_sub(1, 3),
+      "度",
+      longitude |> 
+        stringr::str_sub(4, 5),
+      "分",
+      (longitude |> 
+         stringr::str_sub(7, 7) |> 
+         as.numeric() +
+         longitude |> 
+         stringr::str_sub(8) |> 
+         as.numeric()/1000),
+      "秒"))
+d |> 
+  mutate(longitude = kuniezu::parse_lon_dohunbyo(longitude),
+         latitude = kuniezu::parse_lat_dohunbyo(latitude)) |> 
+  sf::st_as_sf(coords = c("longitude", "latitude"), crs = 4326) |> 
+  mapview::mapview()
+
+
+
 
