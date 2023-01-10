@@ -5,7 +5,8 @@
 # 補充票: hojuhyo
 # 高速票: kosokuhyo
 #################################
-fs::dir_create(here::here("data-raw/npa"), recurse = TRUE)
+fs::dir_create(here::here("data-raw/npa",
+                          c("teigisyo", "code_tbl")), recurse = TRUE)
 npa_domain <- "https://www.npa.go.jp/"
 
 if (length(fs::dir_ls(here::here("data-raw/npa"), recurse = TRUE, regexp = "(hoju|hon|kosoku)hyo_.+.csv$")) != 9L) {
@@ -50,7 +51,6 @@ if (length(fs::dir_ls(here::here("data-raw/npa"), recurse = TRUE, regexp = "(hoj
 
 # ファイル定義書 -----------------------------------------------------------------
 if (length(fs::dir_ls(here::here("data-raw/npa/teigisyo"), regexp = ".csv$")) != 3L) {
-  fs::dir_create(here::here("data-raw/npa/teigisyo"))
   x <- 
     sprintf("%spublications/statistics/koutsuu/opendata/teigisyo/teigisyo.html", 
             npa_domain) |> 
@@ -73,7 +73,7 @@ if (length(fs::dir_ls(here::here("data-raw/npa/teigisyo"), regexp = ".csv$")) !=
 
 
 # 各種コード表 ------------------------------------------------------------------
-if (length(fs::dir_ls(here::here("data-raw/npa/code_tbl"), regexp = ".csv$")) == 59L) {
+if (length(fs::dir_ls(here::here("data-raw/npa/code_tbl"), regexp = ".csv$")) != 59L) {
   x <- 
     sprintf("%spublications/statistics/koutsuu/opendata/koudohyou/koudohyou.html", 
             npa_domain) |> 
@@ -89,8 +89,6 @@ if (length(fs::dir_ls(here::here("data-raw/npa/code_tbl"), regexp = ".csv$")) ==
         rvest::html_elements(css = "#contArea > main > article > section > section > p > a") |> 
         rvest::html_text()) |> 
     ensurer::ensure(nrow(.) == 59L)
-  
-  fs::dir_create(here::here("data-raw/npa/code_tbl"))
   
   purrr::walk(
     df_npa_code$url,
