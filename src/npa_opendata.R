@@ -1,6 +1,7 @@
 
 
 # 本票 ----------------------------------------------------------------------
+# source(here::here("R/npa.R"))
 # df_code <- 
 #   readr::read_csv(here::here("data/npa/コード表一覧.csv"), 
 #                 col_types = "cc")
@@ -13,12 +14,18 @@
 # read_npa_code_tbl(code_files[3]) |> 
 #   filter(stringr::str_detect(都道府県名, "徳島"),
 #          stringr::str_detect(警察署等名, "徳島中央"))
+# read_npa_code_tbl(code_files[3]) |> 
+#   filter(stringr::str_detect(都道府県名, "徳島"),
+#          stringr::str_detect(警察署等名, "徳島中央"))
 # read_npa_code_tbl(code_files[2]) |> 
 #   filter(stringr::str_detect(都道府県名, "徳島"))
+# read_npa_code_tbl(code_files[2]) |>
+#   filter(stringr::str_detect(都道府県名, "東京"))
+# read_npa_code_tbl(code_files[11])
 
+library(dplyr)
 library(arrow)
-d <- 
-  # 徳島県徳島市
+d_raw <- 
   arrow::open_dataset("data/npa/honhyo/",
                       schema = arrow::schema(
                         資料区分 = arrow::int32(),
@@ -79,9 +86,17 @@ d <-
                         latitude = double(),
                         longitude = double()
                       )) |> 
-  filter(資料区分 == 1, pref_code == "80", 市区町村コード == "201") |> 
+  filter(資料区分 == 1)
+
+d <-
+  d_raw |>
+  # 徳島県徳島市
+  filter(pref_code == "80", 市区町村コード == "201")
+
+d <- 
+  d |> 
   select(!c(pref_code, year, month, starts_with("発生日時"))) |>
-  select(datetime, latitude, longitude, 警察署等コード, 死者数, 負傷者数) |> 
+  select(datetime, latitude, longitude, 警察署等コード, 市区町村コード, 死者数, 負傷者数) |> 
   collect()
 
 d |> 

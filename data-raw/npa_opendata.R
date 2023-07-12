@@ -115,12 +115,14 @@ code_files <-
   fs::dir_ls(here::here("data-raw/npa/code_tbl/"), 
              recurse = TRUE, 
              regexp = ".csv$") |> 
+  ensurer::ensure(length(.) == 59L) |> 
   naturalsort::naturalsort()
 
 d_raw <- 
   fs::dir_ls(here::here("data-raw/npa"), 
            recurse = TRUE, 
-           regexp = "honhyo_.+.csv$") |> 
+           regexp = "honhyo_.+.csv$") |>
+  ensurer::ensure(length(.) == 3L) |> 
   purrr::map(
     function(file) {
       read_npa_honhyo(file)    
@@ -130,6 +132,7 @@ d_raw <-
 
 glimpse(d_raw)
 
+# ~5min
 d <-
   d_raw |> 
   modify_npa_honhyo()
