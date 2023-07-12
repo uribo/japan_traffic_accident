@@ -224,11 +224,13 @@ coord_to_dohun <- function(x, type) {
   )
 }
 
+# getOption("digits")
+options(digits = 10)
 .latitude_to_dohun <- function(x) {
   x <- 
     as.integer(
       stringr::str_pad(
-        as.integer(x), width = 9, pad = "0", side = "right"))
+        as.integer(x), width = 9, pad = "0", side = "right")) / 1000
   stringr::str_c(
     "北緯",
     x |> 
@@ -237,17 +239,17 @@ coord_to_dohun <- function(x, type) {
     x |> 
       stringr::str_sub(3, 4),
     "分",
-    (x |> 
+    x |> 
        stringr::str_sub(5, 6) |> 
        as.numeric() +
        x |> 
        stringr::str_sub(7) |> 
-       as.numeric()/1000),
+       as.numeric(),
     "秒")
 }
 .longitude_to_dohun <- function(x) {
   x <- 
-    as.integer(x)
+    as.integer(x) / 1000
   stringr::str_c(
     "東経",
     x |> 
@@ -256,12 +258,14 @@ coord_to_dohun <- function(x, type) {
     x |> 
       stringr::str_sub(4, 5),
     "分",
+    x |> 
+      stringr::str_sub(6, 6),
     (x |> 
        stringr::str_sub(7, 7) |> 
        as.numeric() +
        x |> 
        stringr::str_sub(8) |> 
-       as.numeric()/1000),
+       as.numeric()),
     "秒")
 }
 
@@ -284,12 +288,12 @@ modify_npa_honhyo <- function(df) {
                   longitude = dplyr::if_else(is.na(longitude),
                                              NA_character_,
                                              coord_to_dohun(longitude, "longitude"))) |> 
-    rowwise() |> 
+    dplyr::rowwise() |> 
     dplyr::mutate(latitude = ifelse(is.na(latitude), 
                                     NA_real_,
                                     kuniezu::parse_lat_dohunbyo(latitude)),
                   longitude = ifelse(is.na(longitude), 
                                      NA_real_,
                                      kuniezu::parse_lon_dohunbyo(longitude))) |> 
-    ungroup()
+    dplyr::ungroup()
 }
