@@ -4,3 +4,4 @@
 .Ruserdata
 data-raw/**/*.csv
 *.parquet
+README.html
