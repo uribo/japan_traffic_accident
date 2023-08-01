@@ -10,7 +10,7 @@ fs::dir_create(here::here("data-raw/npa",
                           c("teigisyo", "code_tbl")), recurse = TRUE)
 npa_domain <- "https://www.npa.go.jp/"
 
-if (length(fs::dir_ls(here::here("data-raw/npa"), recurse = TRUE, regexp = "(hoju|hon|kosoku)hyo_.+.csv$")) != 9L) {
+if (length(fs::dir_ls(here::here("data-raw/npa"), recurse = TRUE, regexp = "(hoju|hon|kosoku)hyo_.+.csv$")) != 12L) {
   x <- 
     sprintf("%spublications/statistics/koutsuu/opendata/index_opendata.html", npa_domain) |> 
     rvest::read_html()
@@ -28,7 +28,7 @@ if (length(fs::dir_ls(here::here("data-raw/npa"), recurse = TRUE, regexp = "(hoj
         rvest::html_elements(css = "#contArea > main > article > section > section:nth-child(3) > p > a") |> 
         rvest::html_attr(name = "href") |> 
         xml2::url_absolute(base = npa_domain)) |> 
-    ensurer::ensure(nrow(.) == 3L)
+    ensurer::ensure(nrow(.) == 4L)
   
   purrr::pwalk(
     df_npa_list,
@@ -105,6 +105,33 @@ if (length(fs::dir_ls(here::here("data-raw/npa/code_tbl"), regexp = ".csv$")) !=
               file = basename(url)) |> 
     readr::write_csv(here::here("data/npa/コード表一覧.csv"))
 }
+
+# 2022年はファイル定義書、各種コード表ともにエクセルファイル
+if (!file.exists(here::here("data-raw/npa/teigisyo/fileteigisyo_2022.xlsx")) & file.exists(here::here("data-raw/npa/code_tbl/codebook_2022.xlsx"))) {
+  x <- 
+    sprintf("%spublications/statistics/koutsuu/opendata/2022/opendata_2022.html", 
+            npa_domain) |> 
+    rvest::read_html()
+  
+  x |> 
+    rvest::html_elements(css = "#contArea > main > article > section > section > p > a") |> 
+    rvest::html_attr(name = "href") |>
+    stringr::str_subset("xlsx$") |> 
+    ensurer::ensure(length(.) == 2L) |> 
+    xml2::url_absolute(base = npa_domain) |> 
+    purrr::walk(
+      function(url) {
+        Sys.sleep(8)
+        download.file(url = url,
+                      destfile = here::here(glue::glue("data-raw/npa/{dir}/{x}",
+                                                       dir = dplyr::if_else(stringr::str_detect(basename(url), "codebook"),
+                                                                            "code_tbl",
+                                                                            "teigisyo"),
+                                                       x = basename(url))))
+      }
+    )
+}
+
 
 
 # parquet形式への出力 -----------------------------------------------------------
