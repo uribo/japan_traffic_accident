@@ -1,3 +1,9 @@
+column_fix <- function(x) {
+  stringr::str_replace_all(x,
+                           c("車両形状_" = "車両形状等_",
+                             "エアバッグ" = "エアバック"))  
+}
+
 read_npa_honhyo <- function(path, year = 2022, col_name_fix = TRUE) {
   rlang::arg_match0(as.character(year),
                    as.character(seq.int(2019, 2022)))
@@ -90,9 +96,7 @@ read_npa_honhyo <- function(path, year = 2022, col_name_fix = TRUE) {
   }
   if (col_name_fix) {
     column_feature$name <- 
-      stringr::str_replace_all(column_feature$name,
-                             "車両形状",
-                             "車両形状等")
+      column_fix(column_feature$name)
   }
   d <- 
     readr::read_csv(
@@ -152,9 +156,7 @@ read_npa_hojuhyo <- function(path, year = 2022, col_name_fix = TRUE) {
   }
   if (col_name_fix) {
     column_feature$name <- 
-      stringr::str_replace_all(column_feature$name,
-                               c("車両形状" = "車両形状等",
-                                 "エアバッグ" = "エアバック"))
+      column_fix(column_feature$name)
   }
   d <-
     readr::read_csv(
