@@ -1,4 +1,10 @@
 
+# code_files <- 
+#   fs::dir_ls(here::here("data-raw/npa/code_tbl/"), 
+#              recurse = TRUE, 
+#              regexp = ".csv$") |> 
+#   ensurer::ensure(length(.) == 59L) |> 
+#   naturalsort::naturalsort()
 
 # 本票 ----------------------------------------------------------------------
 # source(here::here("R/npa.R"))

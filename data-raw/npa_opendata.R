@@ -4,6 +4,7 @@
 # 本票: honhyo
 # 補充票: hojuhyo
 # 高速票: kosokuhyo
+# 2019~2021, 2022で項目が異なるので注意
 #################################
 fs::dir_create(here::here("data/npa"), recurse = TRUE)
 fs::dir_create(here::here("data-raw/npa",
@@ -138,21 +139,18 @@ if (!file.exists(here::here("data-raw/npa/teigisyo/fileteigisyo_2022.xlsx")) & f
 library(dplyr)
 source(here::here("R/npa.R"))
 
-code_files <- 
-  fs::dir_ls(here::here("data-raw/npa/code_tbl/"), 
-             recurse = TRUE, 
-             regexp = ".csv$") |> 
-  ensurer::ensure(length(.) == 59L) |> 
-  naturalsort::naturalsort()
-
+# 複数年の本票ファイルを変数名を揃えて結合
 d_raw <- 
-  fs::dir_ls(here::here("data-raw/npa"), 
-           recurse = TRUE, 
-           regexp = "honhyo_.+.csv$") |>
-  ensurer::ensure(length(.) == 3L) |> 
-  purrr::map(
-    function(file) {
-      read_npa_honhyo(file)    
+  tibble::tibble(
+    file = fs::dir_ls(here::here("data-raw/npa"), 
+                      recurse = TRUE, 
+                      regexp = "honhyo_.+.csv$") |>
+      ensurer::ensure(length(.) == 4L),
+    year = stringr::str_extract(basename(file), "[0-9]{1,4}")
+  ) |> 
+  purrr::pmap(
+    function(file, year) {
+      read_npa_honhyo(file, year, col_name_fix = TRUE)  
     }
   ) |> 
   purrr::list_rbind()
