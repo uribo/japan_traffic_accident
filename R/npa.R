@@ -130,18 +130,38 @@ read_npa_kosokuhyo <- function(path, year = 2022) {
   d
 }
 
-read_npa_hojuhyo <- function(path) {
+read_npa_hojuhyo <- function(path, year = 2022, col_name_fix = TRUE) {
+  rlang::arg_match0(as.character(year),
+                    as.character(seq.int(2019, 2022)))
+  if (year >= 2022) {
+    column_feature <-
+      list(type = "ddccccccdcddddcd",
+           name =  c("資料区分", "都道府県コード", "警察署等コード", 
+                     "本票番号", "補充票番号", "当事者種別", "用途別", 
+                     "車両形状等", "乗車別", "乗車等の区分", "サポカー", 
+                     "エアバックの装備", "サイドエアバックの装備", 
+                     "人身損傷程度", "車両の衝突部位", "車両の損壊程度"))
+  } else {
+    column_feature <-
+      list(type = "ddccccdcdddcccd",
+           name =  c("資料区分", "都道府県コード", "警察署等コード", 
+                     "本票番号", "補充票番号", "当事者種別", "乗車別", 
+                     "乗車等の区分", "エアバッグの装備", "サイドエアバッグの装備", 
+                     "人身損傷程度", "用途別", "車両形状", "車両の衝突部位", 
+                     "車両の損壊程度"))    
+  }
+  if (col_name_fix) {
+    column_feature$name <- 
+      stringr::str_replace_all(column_feature$name,
+                               c("車両形状" = "車両形状等",
+                                 "エアバッグ" = "エアバック"))
+  }
   d <-
     readr::read_csv(
       path,
       locale = readr::locale(encoding = "cp932"),
-      col_types = "ddccccdcdddcccd")
-  colnames(d) <-
-    c("資料区分", "都道府県コード", "警察署等コード", 
-      "本票番号", "補充票番号", "当事者種別", "乗車別", 
-      "乗車等の区分", "エアバッグの装備", "サイドエアバッグの装備", 
-      "人身損傷程度", "用途別", "車両形状", "車両の衝突部位", 
-      "車両の損壊程度")
+      col_types = column_feature$type)
+  colnames(d) <- column_feature$name
   d
 }
 
