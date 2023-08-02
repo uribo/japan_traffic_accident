@@ -349,7 +349,8 @@ options(digits = 10)
        as.numeric() +
        x |> 
        stringr::str_sub(7) |> 
-       as.numeric(),
+       as.numeric() |> 
+      tidyr::replace_na(replace = 0),
     "秒")
 }
 .longitude_to_dohun <- function(x) {
@@ -370,7 +371,8 @@ options(digits = 10)
        as.numeric() +
        x |> 
        stringr::str_sub(8) |> 
-       as.numeric()),
+       as.numeric() |> 
+       tidyr::replace_na(replace = 0)),
     "秒")
 }
 
