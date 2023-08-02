@@ -140,12 +140,14 @@ library(dplyr)
 source(here::here("R/npa.R"))
 
 # 複数年の本票ファイルを変数名を揃えて結合
+files <- 
+  fs::dir_ls(here::here("data-raw/npa"), 
+           recurse = TRUE, 
+           regexp = "honhyo_.+.csv$") |>
+  ensurer::ensure(length(.) == 4L)
 d_raw <- 
   tibble::tibble(
-    file = fs::dir_ls(here::here("data-raw/npa"), 
-                      recurse = TRUE, 
-                      regexp = "honhyo_.+.csv$") |>
-      ensurer::ensure(length(.) == 4L),
+    file = files,
     year = stringr::str_extract(basename(file), "[0-9]{1,4}")
   ) |> 
   purrr::pmap(
@@ -153,14 +155,31 @@ d_raw <-
       read_npa_honhyo(file, year, col_name_fix = TRUE)  
     }
   ) |> 
-  purrr::list_rbind()
+  purrr::set_names(files) |> 
+  purrr::list_rbind(names_to = "source_file")
 
 glimpse(d_raw)
+
+which(is.na(d_raw$地点_緯度_北緯))
+sum(d_raw$地点_緯度_北緯 == 0) # 148
+which(is.na(d_raw$地点_経度_東経))
+sum(d_raw$地点_経度_東経 == 0) # 147
+# 0, 1333037516 の組み合わせは記録のミス？(2021.csv)
+
+d_raw |> 
+  select(starts_with("地点_")) |> 
+  filter(地点_緯度_北緯 == 0) |> 
+  distinct()
+
 
 # ~5min
 d <-
   d_raw |> 
   modify_npa_honhyo()
+
+d |> 
+  filter(is.na(latitude)) |> 
+  ensurer::ensure(nrow(.) == 148L)
 
 fs::dir_create(here::here("data/npa/honhyo"))
 d |> 
